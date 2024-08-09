@@ -1,0 +1,2 @@
+set PUBLIC_KEY=''
+set SECRET_KEY=''

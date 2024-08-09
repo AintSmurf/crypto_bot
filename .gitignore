@@ -1,0 +1,6 @@
+__pycache__/
+venv
+info.log
+binance_api_keys.txt
+local_Credentials.ps1
+errors.txt
