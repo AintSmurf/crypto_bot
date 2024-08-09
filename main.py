@@ -26,18 +26,13 @@ logger.addHandler(file_handler)
 if __name__ == "__main__":
     # initialze binance future client
     binance_futures_client = BinanceFuturesClient(True)
-    # binance_futures_contracts = binance_futures_client.get_contracts()
-    # binance_futures_client.get_bid_ask("BTCUSDT")
-    # binance_futures_client.get_historical_candles("BTCUSDT", "15m")
-    # print(binance_futures_client.get_balances())
-    # pprint(
-    #     binance_futures_client.place_order(
-    #         "BTCUSDT", "BUY", 0.008, "LIMIT", 60298.9, "GTC"
-    #     )
-    # )
-    # pprint(binance_futures_client.get_order_status("BTCUSDT", 4053290335))
-    # pprint(binance_futures_client.cancel_order("BTCUSDT", 4053290335))
+
+    # Wait for the WebSocket connection to be established
+    binance_futures_client.connected_event.wait()
+
+    # get wallet balance
+    print(binance_futures_client.get_balances())
 
     # initalize new tkinter window
-    main_window = tk.Tk()
-    main_window.mainloop()
+    # main_window = tk.Tk()
+    # main_window.mainloop()

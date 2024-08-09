@@ -14,7 +14,7 @@ class RequestsUtility:
     # vaildate the response code
     def assert_status_code(self):
         assert self.rs_status_code == self.expected_status_code, (
-            f"Expected status code{self.expected_status_code} but actual status code is{self.rs_status_code}\n"
+            f"Expected status code{self.expected_status_code} but actual status code is {self.rs_status_code}\n"
             f"URL:{self.url}, Response Json: {self.rs_json}"
         )
 
