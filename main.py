@@ -31,8 +31,22 @@ if __name__ == "__main__":
     binance_futures_client.connected_event.wait()
 
     # get wallet balance
-    print(binance_futures_client.get_balances())
+    # binance_futures_client.get_balances()
+    pprint(binance_futures_client.get_contracts())
+
+    # get bid and ask
+    # pprint(binance_futures_client.get_bid_ask("BTCUSDT"))
+
+    # get historical klines
+    # pprint(
+    #     binance_futures_client.get_historical_candles(
+    #         "BTCUSDT",
+    #         "5m",
+    #         "2024-03-10",
+    #         "2024-08-10",
+    #     )
+    # )
 
     # initalize new tkinter window
-    # main_window = tk.Tk()
-    # main_window.mainloop()
+    main_window = tk.Tk()
+    main_window.mainloop()

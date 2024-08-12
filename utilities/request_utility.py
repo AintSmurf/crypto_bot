@@ -7,7 +7,7 @@ logger = logging.getLogger()
 
 class RequestsUtility:
 
-    def __init__(self, base_url):
+    def __init__(self, base_url: str) -> None:
         self.base_url = base_url
         self.expected_status_code = 0
 
@@ -18,7 +18,7 @@ class RequestsUtility:
             f"URL:{self.url}, Response Json: {self.rs_json}"
         )
 
-    def post(self, endpoint, payload=None, headers=None) -> json:
+    def post(self, endpoint, payload: dict, headers=None) -> json:
         if not headers:
             headers = {"Content-Type": "application/json"}
         self.url = self.base_url + endpoint
@@ -42,7 +42,7 @@ class RequestsUtility:
         logger.debug(f"get request extracted the data succssefully")
         return rs_api.json()
 
-    def delete(self, endpoint, payload=None, headers=None):
+    def delete(self, endpoint, payload=None, headers=None) -> json:
         if not headers:
             headers = {"Content-Type": "application/json"}
         self.url = self.base_url + endpoint

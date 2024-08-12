@@ -1,18 +1,22 @@
 import logging
 from utilities.request_utility import RequestsUtility
 from utilities.credentials_utility import CredentialsUtility
-from helpers.binance_futures_helper import generate_signature
+from helpers.binance_futures_helper import *
+from models.candle import Candle
+from models.balance import Balance
+from models.contracts import Contracts
 import time
 import websocket
 import threading
 import json
+
 
 logger = logging.getLogger()
 
 
 class BinanceFuturesClient:
 
-    def __init__(self, testnet) -> None:
+    def __init__(self, testnet: bool) -> None:
         creds_class = CredentialsUtility()
         self.creds = creds_class.get_api_keys()
         self.headers = {"X-MBX-APIKEY": self.creds["PUBLIC_KEY"]}
@@ -25,6 +29,8 @@ class BinanceFuturesClient:
         self.prices = dict()
         self.connected_event = threading.Event()
         logger.info("Binance Futures Client successfilly initialized")
+        self.contract = self.get_contracts()
+        self.balances = self.get_balances()
 
         # run the websocket on paraller
         self.id = 1
@@ -45,7 +51,7 @@ class BinanceFuturesClient:
         # Set dispatcher to automatic reconnection, 5 second reconnect delay if connection closed unexpectedly
         self.ws.run_forever(reconnect=5)
 
-    def on_message(self, ws, message):
+    def on_message(self, ws, message: str):
         response = json.loads(message)
         if "e" in response:
             if response["e"] == "bookTicker":
@@ -60,10 +66,10 @@ class BinanceFuturesClient:
                     self.prices[symbol]["ask"] = float(response["a"])
                 print(self.prices[symbol])
 
-    def on_error(self, ws, error):
+    def on_error(self, ws, error: str):
         print(error)
 
-    def on_close(self, ws, close_status_code, close_msg):
+    def on_close(self, ws, close_status_code: int, close_msg: str):
         logger.info("Binance Futures connection Closed")
 
     def on_open(self, ws):
@@ -81,36 +87,40 @@ class BinanceFuturesClient:
         self.id += 1
 
     # get the contracts from binance futures
-    def get_contracts(self):
+    def get_contracts(self) -> dict:
         endpoint = "/fapi/v1/exchangeInfo"
-        contracts = []
+        contracts = dict()
         response = self.request_utility.get(endpoint=endpoint)
-        for contract in response["symbols"]:
-            contracts.append(contract["pair"])
+        for contract_data in response["symbols"]:
+            contracts["pair"] = Contracts(contract_data)
         return contracts
 
     # get historical candles based on the interval and symbol
-    def get_historical_candles(self, symbol, interval):
+    def get_historical_candles(
+        self, symbol: str, interval: int, start_time: str, end_time: str
+    ) -> list:
         payload = dict()
         candles = []
-        endpoint = "/fapi/v1/klines"
+        logger.info(
+            "Retriving Historical candles \nfrom:%s to:%s\nsymbol:%s , interval:%s",
+            start_time,
+            end_time,
+            symbol,
+            interval,
+        )
         payload["symbol"] = symbol
         payload["interval"] = interval
+        if start_time:
+            payload["startTime"] = date_to_timestamp(start_time)
+        if end_time:
+            payload["endTime"] = date_to_timestamp(end_time)
+        endpoint = "/fapi/v1/klines"
         response = self.request_utility.get(endpoint=endpoint, payload=payload)
-        for candle in response:
-            candles.append(
-                [
-                    candle[0],
-                    float(candle[1]),
-                    float(candle[2]),
-                    float(candle[3]),
-                    float(candle[4]),
-                    float(candle[5]),
-                ]
-            )
+        for c in response:
+            candles.append(Candle(c))
         return candles
 
-    def get_bid_ask(self, symbol):
+    def get_bid_ask(self, symbol: str) -> typing.Dict[str, int]:
         payload = dict()
         endpoint = "/fapi/v1/ticker/bookTicker"
         payload["symbol"] = symbol
@@ -125,7 +135,7 @@ class BinanceFuturesClient:
             self.prices[symbol]["ask"] = float(response["askPrice"])
         return self.prices[symbol]
 
-    def get_balances(self):
+    def get_balances(self) -> typing.Dict[str, str]:
         payload = dict()
         balances = dict()
         payload["timestamp"] = int(time.time() * 1000)
@@ -137,11 +147,20 @@ class BinanceFuturesClient:
             endpoint=endpoint, payload=payload, headers=self.headers
         )
         for balance in response["assets"]:
-            balances[balance["asset"]] = balance["walletBalance"]
+            bl = Balance(balance)
+            balances[bl.asset] = bl.wallet_balance
         logger.info("Current Balance:\n%s", balances)
         return balances
 
-    def place_order(self, symbol, side, quantity, order_type, price=None, tif=None):
+    def place_order(
+        self,
+        symbol: str,
+        side: str,
+        quantity: float,
+        order_type: str,
+        price: float,
+        tif: str,
+    ):
         payload = dict()
         payload["symbol"] = symbol
         payload["side"] = side
@@ -170,7 +189,7 @@ class BinanceFuturesClient:
         )
         return response
 
-    def cancel_order(self, symbol, order_id):
+    def cancel_order(self, symbol: str, order_id: int):
         payload = dict()
         payload["symbol"] = symbol
         payload["orderId"] = order_id
@@ -184,7 +203,7 @@ class BinanceFuturesClient:
         )
         return response
 
-    def get_all_orders(self, symbol):
+    def get_all_orders(self, symbol: str):
         payload = dict()
         payload["symbol"] = symbol
         payload["timestamp"] = int(time.time() * 1000)
@@ -197,7 +216,7 @@ class BinanceFuturesClient:
         )
         return response
 
-    def get_order_status(self, symbol, order_id):
+    def get_order_status(self, symbol: str, order_id: int):
         payload = dict()
         payload["symbol"] = symbol
         payload["orderId"] = order_id
