@@ -6,6 +6,7 @@ import typing
 
 
 def generate_signature(payload: typing.Dict, api_secret: str) -> hmac:
+    # encode to the url the payload values to communicate with binance api
     query_string = urlencode(payload)
     return hmac.new(
         api_secret.encode(), query_string.encode(), hashlib.sha256

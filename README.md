@@ -20,7 +20,8 @@ The Crypto Trading Bot is a Python-based tool designed to interact with Binance 
 
 # Requirements
 * Python 3.x
-* requests library
+* requests 
+* websockets 
 
 # Getting Started
 1) Clone this repository to your local machine
@@ -40,7 +41,11 @@ windows command(powershell)
 ```bash
 .\Credentials.ps1
 ```
-4) run the bot
+4) install requirements
+```bash
+pip install -r requirements.txt
+```
+5) run the bot
 ```bash
 python main.py 
 ```
